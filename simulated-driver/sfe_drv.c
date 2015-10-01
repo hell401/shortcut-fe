@@ -518,12 +518,23 @@ sfe_tx_status_t sfe_drv_create_ipv4_rule_msg(struct sfe_drv_ctx_instance_interna
 	if (msg->msg.rule_create.valid_flags & SFE_RULE_CREATE_QOS_VALID) {
 		sic.src_priority = msg->msg.rule_create.qos_rule.flow_qos_tag;
 		sic.dest_priority = msg->msg.rule_create.qos_rule.return_qos_tag;
+		sic.flags |= SFE_CREATE_FLAG_REMARK_PRIORITY;
 	}
 
 	if (msg->msg.rule_create.valid_flags & SFE_RULE_CREATE_DSCP_MARKING_VALID) {
 		sic.src_dscp = msg->msg.rule_create.dscp_rule.flow_dscp;
 		sic.dest_dscp = msg->msg.rule_create.dscp_rule.return_dscp;
+		sic.flags |= SFE_CREATE_FLAG_REMARK_DSCP;
 	}
+
+#ifdef CONFIG_XFRM
+	if (msg->msg.rule_create.valid_flags & SFE_RULE_CREATE_DIRECTION_VALID) {
+		sic.original_accel = msg->msg.rule_create.direction_rule.flow_accel;
+		sic.reply_accel = msg->msg.rule_create.direction_rule.return_accel;
+	} else {
+		sic.original_accel = sic.reply_accel = 1;
+	}
+#endif
 
 	if (!sfe_ipv4_create_rule(&sic)) {
 		/* success */
@@ -899,6 +910,15 @@ sfe_tx_status_t sfe_drv_create_ipv6_rule_msg(struct sfe_drv_ctx_instance_interna
 		sic.src_dscp = msg->msg.rule_create.dscp_rule.flow_dscp;
 		sic.dest_dscp = msg->msg.rule_create.dscp_rule.return_dscp;
 	}
+
+#ifdef CONFIG_XFRM
+	if (msg->msg.rule_create.valid_flags & SFE_RULE_CREATE_DIRECTION_VALID) {
+		sic.original_accel = msg->msg.rule_create.direction_rule.flow_accel;
+		sic.reply_accel = msg->msg.rule_create.direction_rule.return_accel;
+	} else {
+		sic.original_accel = sic.reply_accel = 1;
+	}
+#endif
 
 	if (!sfe_ipv6_create_rule(&sic)) {
 		/* success */
